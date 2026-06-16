@@ -85,31 +85,31 @@
         // Initialize Firebase
         const communityApp = firebase.initializeApp(communityConfig, "adminInstance");
         const db = communityApp.firestore();
+// Admin Form Submit Logic - Realtime Database me data bhejne ke liye
+document.getElementById('add-match-form').addEventListener('submit', function(e) {
+    e.preventDefault();
 
-        // 1. Match Upload Logic
-        document.getElementById('add-match-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+    const matchName = document.getElementById('matchName').value;
+    const matchTime = document.getElementById('matchTime').value;
+    const matchId = document.getElementById('matchId').value;
 
-            const matchName = document.getElementById('matchName').value;
-            const matchTime = document.getElementById('matchTime').value;
-            const matchId = document.getElementById('matchId').value;
-
-            // Firestore ke 'matches' collection me data add karna
-            db.collection('matches').add({
-                name: matchName,
-                time: matchTime,
-                matchId: matchId,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                alert("Match successfully added to user dropdown!");
-                document.getElementById('add-match-form').reset();
-            })
-            .catch((error) => {
-                console.error("Error adding match: ", error);
-                alert("Error: " + error.message);
-            });
-        });
+    // Project 1: Realtime Database (rtdbEsport) me data push karna
+    rtdbEsport.ref('matches').push({
+        name: matchName,
+        time: matchTime,
+        matchId: matchId,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    })
+    .then(() => {
+        alert("Match successfully added to Realtime Database!");
+        document.getElementById('add-match-form').reset();
+    })
+    .catch((error) => {
+        console.error("Error adding match: ", error);
+        alert("Error: " + error.message);
+    });
+});
+        
 
         // 2. Submissions load karne ka logic (Real-time from Firebase)
         function loadSubmissions() {
