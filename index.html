@@ -196,6 +196,7 @@
             overflow: hidden;
             background: #222;
             border: 1px solid #333;
+            margin-top: 8px;
         }
 
         .post-image-container img {
@@ -260,7 +261,6 @@
     <div class="ad-container">
         <span class="ad-label">Advertisement</span>
         <div class="ad-placeholder">
-            <!-- Yahan baad mein Google AdSense ya Adsterra ka code aayega -->
             <i class="fa-solid fa-rectangle-ad"></i> Responsive Top Banner Ad Slot
         </div>
     </div>
@@ -279,9 +279,7 @@
                     <label>Select Available Match</label>
                     <select id="matchSelect" class="form-control">
                         <option value="">-- Choose Live Match --</option>
-                        <option value="match_001">Free Fire Match #102 - Bermuda (Prize: ₹500)</option>
-                        <option value="match_002">Free Fire Match #103 - Purgatory (Prize: ₹1000)</option>
-                        <option value="match_003">Free Fire CS Match #45 - Kalahari (Prize: ₹300)</option>
+                        <!-- Matches yahan Firebase se dynamic load honge -->
                     </select>
                 </div>
 
@@ -334,117 +332,305 @@
             </h2>
             
             <div id="feed-container">
-                <!-- Sample Post 1 (Match Proof Upload) -->
-                <div class="feed-post">
-                    <div class="post-header">
-                        <span><i class="fa-solid fa-gamepad"></i> Match Proof</span>
-                        <span class="post-uid">UID: 98273645</span>
-                    </div>
-                    <div class="post-content">
-                        Submitted proof for <strong>Match #102</strong>. Status: <span style="color:#28a745;">Pending Verification</span>
-                    </div>
-                    <div class="post-image-container">
-                        <img src="https://via.placeholder.com/600x300/222/fff?text=Sample+Kill+Screenshot" alt="Screenshot">
-                    </div>
-                </div>
-
-                <!-- 💰 NATIVE AD SLOT IN BETWEEN FEED CONTENT -->
-                <div class="ad-container" style="margin: 20px 0;">
-                    <span class="ad-label">Sponsored Ad</span>
-                    <div class="ad-placeholder" style="padding: 10px 0;">
-                        <i class="fa-solid fa-rectangle-ad"></i> In-Feed Native Ad Unit (High Earnings)
-                    </div>
-                </div>
-
-                <!-- Sample Post 2 (User Opinion) -->
-                <div class="feed-post">
-                    <div class="post-header">
-                        <span><i class="fa-solid fa-comment"></i> User Opinion</span>
-                        <span class="post-uid">UID: 10293847</span>
-                    </div>
-                    <div class="post-content">
-                        Bhai Match #102 ka prize kab tak credit hoga? Booyah ekdam clean tha hacker nahi tha game me! 🔥
-                    </div>
-                </div>
+                <!-- Live data Firebase se automatic yahan render hoga -->
             </div>
         </div>
 
     </div>
 
-    <!-- 💰 BOTTOM BANNER AD SLOT -->
-    <div class="ad-container" style="margin-top: 20px;">
-        <span class="ad-label">Advertisement</span>
-        <div class="ad-placeholder">
-            <i class="fa-solid fa-rectangle-ad"></i> Bottom Banner Ad Slot
-        </div>
-    </div>
-
-    <!-- 📱 FIXED BOTTOM NAVIGATION BAR (3 BUTTONS SYSTEM) -->
+    <!-- 📱 FIXED BOTTOM NAVIGATION BAR -->
     <div id="fixed-bottom-nav-bar">
-        <button onclick="switchTab('upload')" id="nav-upload" class="nav-btn active">
-            <i class="fa-solid fa-house-chimney" style="font-size: 14px;"></i>
-            <span>Home</span>
+        <button class="nav-btn active" onclick="switchTab('sec-upload', this)">
+            <i class="fa-solid fa-house"></i> Home
         </button>
-
-        <button onclick="switchTab('opinion')" id="nav-opinion" class="nav-btn">
-            <i class="fa-solid fa-pen-to-square" style="font-size: 14px;"></i>
-            <span>Post Opinion</span>
+        <button class="nav-btn" onclick="switchTab('sec-opinion', this)">
+            <i class="fa-solid fa-pen-to-square"></i> Post
         </button>
-
-        <button onclick="switchTab('results')" id="nav-results" class="nav-btn">
-            <i class="fa-solid fa-square-poll-vertical" style="font-size: 14px;"></i>
-            <span>Results Feed</span>
+        <button class="nav-btn" onclick="switchTab('sec-results', this)">
+            <i class="fa-solid fa-square-poll-vertical"></i> Feed
         </button>
     </div>
 
-    <!-- 🛠️ JAVASCRIPT LOGIC FOR NAVIGATION & ACTIONS -->
+
+    <!-- 📦 Firebase Core aur Firestore Libraries (v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
-        // Tab Switching Logic
-        function switchTab(tabId) {
-            // Remove active class from all sections
+        // 🔥 Aapki Real Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
+            authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
+            projectId: "ff-tornament-app-9e3ae",
+            databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/", 
+            messagingSenderId: "595326120234",
+            appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
+        };
+        
+        // Firebase Initialize
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 🔑 Aapki ImgBB API Key
+        const IMGBB_API_KEY = '0de43554e74e8bef68fc0f49cccf0d1f';
+
+        // ========================================================
+        // 📱 TAB SWITCHING LOGIC
+        // ========================================================
+        function switchTab(sectionId, element) {
+            // Sabhi sections ko chupayein
             document.querySelectorAll('.app-section').forEach(section => {
                 section.classList.remove('active');
             });
-            // Remove active class from all buttons
+            // Sabhi buttons se active class hatayein
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
 
-            // Add active class to selected tab and button
-            document.getElementById('sec-' + tabId).classList.add('active');
-            document.getElementById('nav-' + tabId).classList.add('active');
-            
-            // Scroll to top when tab changes
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Target section aur button ko active karein
+            document.getElementById(sectionId).classList.add('active');
+            element.classList.add('active');
         }
 
-        // Action Handlers
-        function handleMatchUpload() {
-            const match = document.getElementById('matchSelect').value;
+        // ========================================================
+        // 🔄 1️⃣ LIVE MATCHES CATCH LOGIC
+        // ========================================================
+        function fetchLiveMatches() {
+            const matchSelect = document.getElementById('matchSelect');
+            
+            db.collection('matches').where("status", "==", "live").onSnapshot((querySnapshot) => {
+                matchSelect.innerHTML = '<option value="">-- Choose Live Match --</option>';
+                
+                if(querySnapshot.empty) {
+                    matchSelect.innerHTML += '<option value="">No Live Match Available</option>';
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const matchData = doc.data();
+                    matchSelect.innerHTML += `
+                        <option value="${doc.id}">${matchData.name} (Prize: ₹${matchData.prize || 0})</option>
+                    `;
+                });
+            }, (error) => {
+                console.error("Matches load karne mein error: ", error);
+            });
+        }
+
+        // ========================================================
+        // 📺 2️⃣ REAL-TIME COMMUNITY FEED LOGIC
+        // ========================================================
+        function listenToCommunityFeed() {
+            const feedContainer = document.getElementById('feed-container');
+
+            // Dono collections (submissions aur opinions) ko real-time listen karne ke liye composite display ya single unified system
+            // Simple approach: Opinions aur Submissions dono ko fetch karke render karna timestamp order mein
+            db.collection('opinions').orderBy('timestamp', 'desc').limit(15).onSnapshot((snapshot) => {
+                renderFeed();
+            });
+
+            db.collection('submissions').orderBy('timestamp', 'desc').limit(15).onSnapshot((snapshot) => {
+                renderFeed();
+            });
+        }
+
+        async function renderFeed() {
+            const feedContainer = document.getElementById('feed-container');
+            let combinedFeed = [];
+
+            try {
+                const opinionsSnap = await db.collection('opinions').orderBy('timestamp', 'desc').limit(10).get();
+                opinionsSnap.forEach(doc => {
+                    combinedFeed.push({ id: doc.id, ...doc.data(), feedType: 'opinion' });
+                });
+
+                const submissionsSnap = await db.collection('submissions').orderBy('timestamp', 'desc').limit(10).get();
+                submissionsSnap.forEach(doc => {
+                    combinedFeed.push({ id: doc.id, ...doc.data(), feedType: 'submission' });
+                });
+
+                // Sort by timestamp descending
+                combinedFeed.sort((a, b) => {
+                    const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
+                    const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
+                    return timeB - timeA;
+                });
+
+                feedContainer.innerHTML = '';
+
+                if(combinedFeed.length === 0) {
+                    feedContainer.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">No posts yet!</div>';
+                    return;
+                }
+
+                combinedFeed.forEach((item, index) => {
+                    let postHtml = '';
+                    
+                    if(item.feedType === 'opinion') {
+                        postHtml = `
+                            <div class="feed-post">
+                                <div class="post-header">
+                                    <span><i class="fa-solid fa-comment"></i> User Opinion</span>
+                                    <span class="post-uid">Community Post</span>
+                                </div>
+                                <div class="post-content">${item.message}</div>
+                                ${item.screenshot ? `<div class="post-image-container"><img src="${item.screenshot}" alt="Opinion Image"></div>` : ''}
+                            </div>
+                        `;
+                    } else {
+                        postHtml = `
+                            <div class="feed-post">
+                                <div class="post-header">
+                                    <span><i class="fa-solid fa-gamepad"></i> Match Proof</span>
+                                    <span class="post-uid">UID: ${item.uid}</span>
+                                </div>
+                                <div class="post-content">
+                                    Submitted proof for <strong>${item.matchName || 'Match'}</strong>. <br>
+                                    Status: <span style="color:${item.status === 'pending' ? '#ff9f43' : '#28a745'}; font-weight:bold; text-transform:uppercase;">${item.status}</span>
+                                </div>
+                                <div class="post-image-container">
+                                    <img src="${item.killScreenshot}" alt="Kill Screenshot">
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    feedContainer.innerHTML += postHtml;
+
+                    // 💰 AD UNIT: Beech mein Native Advertisement display karne ke liye slot
+                    if (index === 1) {
+                        feedContainer.innerHTML += `
+                            <div class="ad-container" style="margin: 20px 0;">
+                                <span class="ad-label">Sponsored Ad</span>
+                                <div class="ad-placeholder" style="padding: 10px 0;">
+                                    <i class="fa-solid fa-rectangle-ad"></i> In-Feed Native Ad Unit (High Earnings)
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+            } catch (err) {
+                console.error("Feed render karne mein issue:", err);
+            }
+        }
+
+
+        // ========================================================
+        // 📤 3️⃣ IMGBB IMAGE UPLOAD FUNCTION
+        // ========================================================
+        async function uploadToImgBB(file) {
+            if (!file) return null;
+            
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    return data.data.url;
+                } else {
+                    console.error("ImgBB Error:", data.error.message);
+                    return null;
+                }
+            } catch (error) {
+                console.error("Upload failed:", error);
+                return null;
+            }
+        }
+
+// ========================================================
+        // 🎮 4️⃣ TAB: MATCH DETAILS UPLOAD FORM LOGIC
+        // ========================================================
+        async function handleMatchUpload() {
+            const matchId = document.getElementById('matchSelect').value;
+            const matchSelectEl = document.getElementById('matchSelect');
+            const matchText = matchSelectEl.selectedIndex >= 0 ? matchSelectEl.options[matchSelectEl.selectedIndex].text : '';
             const uid = document.getElementById('userUid').value;
             const killFile = document.getElementById('killScreenshot').files[0];
+            const booyahFile = document.getElementById('booyahScreenshot').files[0];
 
-            if (!match || !uid || !killFile) {
+            if (!matchId || !uid || !killFile) {
                 alert("⚠️ Please Match Select karein, UID daalein aur Kill Screenshot upload karein!");
                 return;
             }
 
-            alert("✅ Match details successfully receive ho gayi hain! Verification pending hai.");
-            // Firebase Integrations yahan karein
-        }
+            alert("🔄 Screenshots ImgBB par aur details Firebase par bheji ja rahi hain...");
 
-        function handleOpinionSubmit() {
-            const msg = document.getElementById('opinionMessage').value;
+            const killImageUrl = await uploadToImgBB(killFile);
+            const booyahImageUrl = booyahFile ? await uploadToImgBB(booyahFile) : null;
 
-            if (!msg.trim()) {
-                alert("⚠️ Kuch toh likhiye opinion section mein!");
+            if (!killImageUrl) {
+                alert("❌ Kill Screenshot upload nahi ho paya. Kripya net check karein.");
                 return;
             }
 
-            alert("✅ Aapka opinion successfully community feed par post ho gaya hai!");
-            // Firebase Integrations yahan karein
+            db.collection('submissions').add({
+                matchId: matchId,
+                matchName: matchText,
+                uid: uid,
+                killScreenshot: killImageUrl,
+                booyahScreenshot: booyahImageUrl,
+                status: 'pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                alert("✅ Aapka Proof submit ho gaya hai! Community Feed par dekhein.");
+                document.getElementById('userUid').value = '';
+                document.getElementById('killScreenshot').value = '';
+                document.getElementById('booyahScreenshot').value = '';
+                document.getElementById('matchSelect').value = '';
+            })
+            .catch((error) => {
+                console.error("Firebase Entry Error: ", error);
+                alert("❌ Data save nahi hua. Firebase Firestore rules check karein.");
+            });
         }
+
+
+        // ========================================================
+        // 💬 5️⃣ TAB: POST OPINION LOGIC
+        // ========================================================
+        async function handleOpinionSubmit() {
+            const msg = document.getElementById('opinionMessage').value;
+            const opinionFile = document.getElementById('opinionFile').files[0];
+
+            if (!msg.trim()) {
+                alert("⚠️ Please opinion post karne ke liye kuch likhein!");
+                return;
+            }
+
+            alert("🔄 Aapka opinion upload ho raha hai...");
+
+            const opinionImageUrl = opinionFile ? await uploadToImgBB(opinionFile) : null;
+
+            db.collection('opinions').add({
+                message: msg,
+                screenshot: opinionImageUrl,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                alert("✅ Post successfully feed par upload ho gaya!");
+                document.getElementById('opinionMessage').value = '';
+                document.getElementById('opinionFile').value = '';
+                switchTab('sec-results', document.querySelectorAll('.nav-btn')[2]); // Redirect to Feed
+            })
+            .catch((error) => {
+                console.error("Opinion Error: ", error);
+                alert("❌ Post submit karne mein error aaya.");
+            });
+        }
+
+        // Init setup on window load
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchLiveMatches();
+            listenToCommunityFeed();
+        });
     </script>
 </body>
-  </html>
-  
+</html>
