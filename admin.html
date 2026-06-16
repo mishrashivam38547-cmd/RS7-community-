@@ -4,70 +4,30 @@
     <meta charset="UTF-8">
     <title>RS7 Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
     <style>
         body { background: #0b0b0b; color: #fff; font-family: sans-serif; padding: 20px; }
         h1 { color: #ff4e50; text-align: center; }
         
-        /* New Form Styling */
         .form-container {
-            background: #161616;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 500px;
-            margin: 20px auto 40px auto;
-            border: 1px solid #222;
+            background: #161616; padding: 20px; border-radius: 10px;
+            max-width: 500px; margin: 20px auto 40px auto; border: 1px solid #222;
         }
-        .form-container h3 {
-            color: #f9d423;
-            margin-top: 0;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 13px;
-            color: #aaa;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            background: #222;
-            border: 1px solid #333;
-            color: #fff;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        .form-group input:focus {
-            outline: none;
-            border-color: #ff4e50;
-        }
-        .btn-submit {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(45deg, #ff4e50, #f9d423);
-            border: none;
-            color: #fff;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            text-transform: uppercase;
-        }
-        .btn-submit:hover {
-            opacity: 0.9;
-        }
+        .form-container h3 { color: #f9d423; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 13px; color: #aaa; }
+        .form-group input { width: 100%; padding: 10px; background: #222; border: 1px solid #333; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        .form-group input:focus { outline: none; border-color: #ff4e50; }
+        
+        .btn-submit { width: 100%; padding: 12px; background: linear-gradient(45deg, #ff4e50, #f9d423); border: none; color: #fff; font-weight: bold; border-radius: 5px; cursor: pointer; font-size: 14px; text-transform: uppercase; }
+        .btn-submit:hover { opacity: 0.9; }
 
-        /* Table Styling */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #161616; border-radius: 10px; overflow: hidden; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #222; font-size: 14px; }
         th { background: #222; color: #f9d423; }
-        
         .btn-action { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-approve { background: #28a745; color: white; margin-right: 5px; }
         .btn-reject { background: #dc3545; color: white; }
@@ -78,7 +38,7 @@
 
     <h1><i class="fa-solid fa-user-shield"></i> Admin Control Panel</h1>
 
-    <!-- 1. NAYA MATCH UPLOAD KARNE KA CARD -->
+    <!-- Upload Match Form -->
     <div class="form-container">
         <h3><i class="fa-solid fa-gamepad"></i> Upload Live Match Details</h3>
         <form id="add-match-form">
@@ -108,13 +68,25 @@
                 <th>Action</th>
             </tr>
         </thead>
-        <tbody id="admin-table-body">
-            <!-- Data yahan Firebase se aayega -->
-        </tbody>
+        <tbody id="admin-table-body"></tbody>
     </table>
 
     <script>
-        // FORM SUBMIT HANDLER (Firebase integration ke liye tayyar)
+        // Firebase Configuration
+        const communityConfig = {
+            apiKey: "AIzaSyDqOAV7hfa6oVxz908GNWMvc0cq5n6cIDc",
+            authDomain: "rs7-community.firebaseapp.com",
+            projectId: "rs7-community",
+            storageBucket: "rs7-community.firebasestorage.app",
+            messagingSenderId: "844493221308",
+            appId: "1:844493221308:web:20982c26bac640da2f0fb9"
+        };
+        
+        // Initialize Firebase
+        const communityApp = firebase.initializeApp(communityConfig, "adminInstance");
+        const db = communityApp.firestore();
+
+        // 1. Match Upload Logic
         document.getElementById('add-match-form').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -122,46 +94,55 @@
             const matchTime = document.getElementById('matchTime').value;
             const matchId = document.getElementById('matchId').value;
 
-            // Firebase Firestore Logic (Jab aap Firebase SDK initialize kar lenge):
-            /*
+            // Firestore ke 'matches' collection me data add karna
             db.collection('matches').add({
                 name: matchName,
                 time: matchTime,
                 matchId: matchId,
-                createdAt: new Date()
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             })
             .then(() => {
-                alert("Match successfully added!");
+                alert("Match successfully added to user dropdown!");
                 document.getElementById('add-match-form').reset();
             })
             .catch((error) => {
                 console.error("Error adding match: ", error);
+                alert("Error: " + error.message);
             });
-            */
-
-            // Dummy Alert testing ke liye:
-            alert(`Success!\nMatch: ${matchName}\nID: ${matchId}\n\nYeh data ab Firebase ke 'matches' collection me save ho jayega.`);
-            this.reset();
         });
 
-        // Submissions load karne ka logic
+        // 2. Submissions load karne ka logic (Real-time from Firebase)
         function loadSubmissions() {
-            const tableBody = document.getElementById('admin-table-body');
-            tableBody.innerHTML = `
-                <tr>
-                    <td>UID-998877</td>
-                    <td><a href="#" style="color:#00d2d3;">View Image</a></td>
-                    <td><span class="status-pill" style="background:#444;">Pending</span></td>
-                    <td>
-                        <button class="btn-action btn-approve" onclick="updateStatus('approve')">Approve</button>
-                        <button class="btn-action btn-reject" onclick="updateStatus('reject')">Reject</button>
-                    </td>
-                </tr>
-            `;
+            db.collection('submissions').onSnapshot((snapshot) => {
+                const tableBody = document.getElementById('admin-table-body');
+                tableBody.innerHTML = '';
+                
+                if(snapshot.empty) {
+                    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#aaa;">No submissions found</td></tr>`;
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${data.uid || 'N/A'}</td>
+                            <td><a href="${data.screenshotUrl || '#'}" target="_blank" style="color:#00d2d3;">View Image</a></td>
+                            <td><span class="status-pill" style="background:#444;">${data.status || 'Pending'}</span></td>
+                            <td>
+                                <button class="btn-action btn-approve" onclick="updateStatus('${doc.id}', 'Approved')">Approve</button>
+                                <button class="btn-action btn-reject" onclick="updateStatus('${doc.id}', 'Rejected')">Reject</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
         }
 
-        function updateStatus(status) {
-            alert("Submission Status updated to: " + status);
+        function updateStatus(id, status) {
+            db.collection('submissions').doc(id).update({ status: status })
+            .then(() => alert("Status updated to: " + status))
+            .catch(err => console.error(err));
         }
 
         loadSubmissions();
