@@ -85,7 +85,7 @@
         // Initialize Firebase
         const communityApp = firebase.initializeApp(communityConfig, "adminInstance");
         const db = communityApp.firestore();
-// Admin Form Submit Logic - Realtime Database me data bhejne ke liye
+// Admin Form Submit Logic (Ise apne Admin Dashboard ke script me update karein)
 document.getElementById('add-match-form').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -93,24 +93,23 @@ document.getElementById('add-match-form').addEventListener('submit', function(e)
     const matchTime = document.getElementById('matchTime').value;
     const matchId = document.getElementById('matchId').value;
 
-    // Project 1: Realtime Database (rtdbEsport) me data push karna
+    // Realtime Database me data bhejna (rtdbEsport)
     rtdbEsport.ref('matches').push({
         name: matchName,
         time: matchTime,
         matchId: matchId,
+        status: "live", // 👈 YEH SABSE ZAROORI HAI, iske bina dropdown me nahi dikhega!
         timestamp: firebase.database.ServerValue.TIMESTAMP
     })
     .then(() => {
-        alert("Match successfully added to Realtime Database!");
+        alert("🔥 Match successfully added and set to Live!");
         document.getElementById('add-match-form').reset();
     })
     .catch((error) => {
-        console.error("Error adding match: ", error);
         alert("Error: " + error.message);
     });
 });
         
-
         // 2. Submissions load karne ka logic (Real-time from Firebase)
         function loadSubmissions() {
             db.collection('submissions').onSnapshot((snapshot) => {
