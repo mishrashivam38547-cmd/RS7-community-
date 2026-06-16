@@ -15,8 +15,8 @@
         .card { background: #141414; border: 1px solid #262626; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .card-title { color: #ffb703; font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
         label { display: block; color: #aaaaaa; font-size: 13px; margin-bottom: 5px; margin-top: 15px; }
-        select, input[type="text"], input[type="file"] { width: 100%; background: #222222; border: 1px solid #333333; color: white; padding: 12px; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 5px; }
-        select:focus, input[type="text"]:focus { border-color: #ffb703; }
+        select, input[type="text"], input[type="file"], input[type="datetime-local"] { width: 100%; background: #222222; border: 1px solid #333333; color: white; padding: 12px; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 5px; }
+        select:focus, input[type="text"]:focus, input[type="datetime-local"]:focus { border-color: #ffb703; }
         .btn-submit { background: linear-gradient(135deg, #d9381e, #ffb703); color: white; border: none; width: 100%; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-submit:active { transform: scale(0.98); }
         .app-section { display: none; }
@@ -39,7 +39,7 @@
     </div>
 
     <div class="container">
-        <!-- 🏠 HOME TAB: SUBMISSIONS -->
+        <!-- 🏠 HOME TAB: USER SUBMISSIONS -->
         <div id="sec-home" class="app-section active">
             <div class="card">
                 <div class="card-title">
@@ -88,6 +88,28 @@
                 <!-- Posts dynamic yahan aayenge -->
             </div>
         </div>
+
+        <!-- ⚙️ ADMIN PANEL TAB (Hidden by default) -->
+        <div id="sec-admin" class="app-section">
+            <div class="card" style="border-color: #ff4d4d;">
+                <div class="card-title" style="color: #ff4d4d;">
+                    <i class="fa-solid fa-user-shield"></i> Admin Control Panel
+                </div>
+                
+                <form id="add-match-form">
+                    <label>Match Name / Title</label>
+                    <input type="text" id="adminMatchName" placeholder="e.g., Free Fire Daily Scrims" required>
+
+                    <label>Date & Time</label>
+                    <input type="datetime-local" id="adminMatchTime" required>
+
+                    <label>Unique Match ID</label>
+                    <input type="text" id="adminMatchId" placeholder="e.g., FF-MATCH-101" required>
+
+                    <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #ff4d4d, #ffb703);">Upload & Live Match</button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Bottom Navigation Buttons -->
@@ -103,39 +125,25 @@
         </button>
     </div>
 
-    <!-- Firebase V8 Core & Services Scripts -->
+    <!-- Firebase V8 Core & Realtime Database Script -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        // 🎮 PROJECT-1 CONFIG (Realtime Database ke liye)
-        const esportConfig = {
-            apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
-            authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
-            projectId: "ff-tornament-app-9e3ae",
-            databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/",
-            messagingSenderId: "595326120234",
-            appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
-        };
-
-        // 💬 PROJECT-2 CONFIG (Firestore Submissions/Opinions ke liye)
-        const communityConfig = {
+        // 💬 MAIN FIREBASE CONFIG (RS7 Community Project)
+        const firebaseConfig = {
             apiKey: "AIzaSyDqOAV7hfa6oVxz908GNWMvc0cq5n6cIDc",
             authDomain: "rs7-community.firebaseapp.com",
             projectId: "rs7-community",
-            storageBucket: "rs7-community.firebasestorage.app",
+            databaseURL: "https://rs7-community-default-rtdb.firebaseio.com/", // Updated to RS7 RTDB URL
             messagingSenderId: "844493221308",
             appId: "1:844493221308:web:20982c26bac640da2f0fb9"
         };
 
-        // Dual Apps Initialize
-        const esportApp = firebase.initializeApp(esportConfig, "esportApp");
-        const communityApp = firebase.initializeApp(communityConfig, "communityApp");
-
-        const rtdbEsport = firebase.database(esportApp);      // Project 1
-        const dbCommunity = firebase.firestore(communityApp); // Project 2
-
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const rtdb = firebase.database(); 
+                         
         const IMGBB_API_KEY = '0de43554e74e8bef68fc0f49cccf0d1f';
 
         // Tab Switch Navigation
@@ -143,14 +151,39 @@
             document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
-            element.classList.add('active');
+            if(element) element.classList.add('active');
         }
 
-        // 🔄 FETCH MATCHES FROM REALTIME DATABASE (PROJECT 1)
+        // ⚙️ ADMIN: UPLOAD MATCH
+        document.getElementById('add-match-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const matchName = document.getElementById('adminMatchName').value;
+            const matchTime = document.getElementById('adminMatchTime').value;
+            const matchId = document.getElementById('adminMatchId').value;
+
+            rtdb.ref('matches').push({
+                name: matchName,
+                time: matchTime,
+                matchId: matchId,
+                status: "live",
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            })
+            .then(() => {
+                alert("🔥 Match uploaded successfully to RS7 Community!");
+                document.getElementById('add-match-form').reset();
+                switchTab('sec-home', document.querySelectorAll('.nav-btn')[0]);
+            })
+            .catch((error) => {
+                alert("Database Error: " + error.message);
+            });
+        });
+
+        // 🔄 USER: FETCH LIVE MATCHES FOR DROPDOWN
         function fetchLiveMatches() {
             const matchSelect = document.getElementById('matchSelect');
             
-            rtdbEsport.ref('matches').on('value', (snapshot) => {
+            rtdb.ref('matches').on('value', (snapshot) => {
                 matchSelect.innerHTML = '<option value="">-- Choose Live Match --</option>';
                 
                 if (!snapshot.exists()) {
@@ -161,11 +194,17 @@
                 let hasLiveMatch = false;
                 snapshot.forEach((childSnapshot) => {
                     const matchData = childSnapshot.val();
-                    // Loose case check space ignore karne ke liye
+                    
                     if (matchData && matchData.status && matchData.status.toString().trim().toLowerCase() === 'live') {
                         hasLiveMatch = true;
+                        
+                        let displayDate = "";
+                        if(matchData.time) {
+                            displayDate = " | " + new Date(matchData.time).toLocaleString('en-IN', {dateStyle: 'medium', timeStyle: 'short'});
+                        }
+
                         matchSelect.innerHTML += `
-                            <option value="${childSnapshot.key}">${matchData.name || 'Unnamed Match'}</option>
+                            <option value="${childSnapshot.key}">${matchData.name || 'Unnamed Match'}${displayDate}</option>
                         `;
                     }
                 });
@@ -173,12 +212,10 @@
                 if (!hasLiveMatch) {
                     matchSelect.innerHTML += '<option value="">No Live Match Available</option>';
                 }
-            }, (error) => {
-                console.error("Database Connection Error:", error);
             });
         }
 
-        // 📤 IMGBB UPLOAD IMAGE
+        // 📤 IMGBB IMAGE UPLOAD
         async function uploadToImgBB(file) {
             if (!file) return null;
             const formData = new FormData();
@@ -193,7 +230,7 @@
             }
         }
 
-        // 🎮 SUBMIT MATCH PROOF TO FIRESTORE (PROJECT 2)
+        // 🎮 USER: SUBMIT MATCH PROOF
         async function handleMatchUpload() {
             const matchId = document.getElementById('matchSelect').value;
             const matchSelectEl = document.getElementById('matchSelect');
@@ -216,8 +253,8 @@
                 return;
             }
 
-            dbCommunity.collection('submissions').add({
-                matchId, matchName: matchText, uid, killScreenshot: killUrl, booyahScreenshot: booyahUrl, status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            rtdb.ref('submissions').push({
+                matchId, matchName: matchText, uid, killScreenshot: killUrl, booyahScreenshot: booyahUrl, status: 'pending', timestamp: firebase.database.ServerValue.TIMESTAMP
             }).then(() => {
                 alert("✅ Match details successfully uploaded!");
                 document.getElementById('userUid').value = '';
@@ -227,7 +264,7 @@
             }).catch(err => alert("Error: " + err.message));
         }
 
-        // 💬 SUBMIT OPINION TO FIRESTORE (PROJECT 2)
+        // 💬 USER: SUBMIT OPINION
         async function handleOpinionSubmit() {
             const msg = document.getElementById('opinionMessage').value;
             const file = document.getElementById('opinionFile').files[0];
@@ -240,20 +277,20 @@
             alert("🔄 Posting...");
             const imgUrl = file ? await uploadToImgBB(file) : null;
 
-            dbCommunity.collection('opinions').add({
-                message: msg, screenshot: imgUrl, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            rtdb.ref('opinions').push({
+                message: msg, screenshot: imgUrl, timestamp: firebase.database.ServerValue.TIMESTAMP
             }).then(() => {
                 alert("✅ Posted successfully!");
                 document.getElementById('opinionMessage').value = '';
                 document.getElementById('opinionFile').value = '';
                 switchTab('sec-feed', document.querySelectorAll('.nav-btn')[2]);
-            });
+            }).catch(err => alert("Error: " + err.message));
         }
 
         // 📺 REALTIME FEED UPDATES
         function listenToFeed() {
-            dbCommunity.collection('submissions').orderBy('timestamp', 'desc').limit(10).onSnapshot(snap => renderFeed());
-            dbCommunity.collection('opinions').orderBy('timestamp', 'desc').limit(10).onSnapshot(snap => renderFeed());
+            rtdb.ref('submissions').limitToLast(10).on('value', () => renderFeed());
+            rtdb.ref('opinions').limitToLast(10).on('value', () => renderFeed());
         }
 
         async function renderFeed() {
@@ -261,13 +298,13 @@
             let list = [];
             
             try {
-                const subSnap = await dbCommunity.collection('submissions').orderBy('timestamp', 'desc').limit(10).get();
-                subSnap.forEach(doc => list.push({ ...doc.data(), type: 'sub' }));
+                const subSnapshot = await rtdb.ref('submissions').limitToLast(10).once('value');
+                subSnapshot.forEach(child => { list.push({ ...child.val(), type: 'sub' }); });
 
-                const opSnap = await dbCommunity.collection('opinions').orderBy('timestamp', 'desc').limit(10).get();
-                opSnap.forEach(doc => list.push({ ...doc.data(), type: 'op' }));
+                const opSnapshot = await rtdb.ref('opinions').limitToLast(10).once('value');
+                opSnapshot.forEach(child => { list.push({ ...child.val(), type: 'op' }); });
 
-                list.sort((a,b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+                list.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
                 feedContainer.innerHTML = list.length === 0 ? '<div style="text-align:center;color:#666;padding:20px;">No posts yet!</div>' : '';
 
                 list.forEach(item => {
