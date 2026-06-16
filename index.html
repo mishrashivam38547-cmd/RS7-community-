@@ -408,28 +408,49 @@ function switchTab(sectionId, element) {
 function fetchLiveMatches() {
     const matchSelect = document.getElementById('matchSelect');
     
-    // Realtime Database ke 'matches' node ko listen karenge
+    console.log("🔄 Realtime Database se connect karne ki koshish kar rahe hain...");
+    
+    // Test ke liye direct ref open kar rahe hain
     rtdbEsport.ref('matches').on('value', (snapshot) => {
+        console.log("📡 Database Snapshot mila:", snapshot.exists());
         matchSelect.innerHTML = '<option value="">-- Choose Live Match --</option>';
         
         if (!snapshot.exists()) {
-            matchSelect.innerHTML += '<option value="">No Live Match Available</option>';
+            console.warn("⚠️ 'matches' naam ka koi node database mein nahi mila!");
+            matchSelect.innerHTML += '<option value="">No Live Match Available (Node Not Found)</option>';
             return;
         }
 
         let hasLiveMatch = false;
+        let totalMatchesFound = 0;
 
         snapshot.forEach((childSnapshot) => {
+            totalMatchesFound++;
             const matchData = childSnapshot.val();
+            console.log(`🎮 Match ID: ${childSnapshot.key}, Status in DB: "${matchData ? matchData.status : 'No Status'}"`);
             
-            // Agar match ka status exact 'live' hai tabhi dropdown mein aayega
-            if (matchData && matchData.status === 'live') {
+            // Status check ko thoda loose kar rahe hain (spaces handle karne ke liye)
+            if (matchData && matchData.status && matchData.status.toString().trim().toLowerCase() === 'live') {
                 hasLiveMatch = true;
                 matchSelect.innerHTML += `
                     <option value="${childSnapshot.key}">${matchData.name || 'Unnamed Match'} (Prize: ₹${matchData.prize || 0})</option>
                 `;
             }
         });
+
+        console.log(`📊 Total Matches Checked: ${totalMatchesFound}, Live Found: ${hasLiveMatch}`);
+
+        if (!hasLiveMatch) {
+            matchSelect.innerHTML += '<option value="">No Live Match Available</option>';
+            // Ek chota alert jo live test ke waqt batayega ki data mila par status galat tha
+            alert(`Database connect ho gaya! Total ${totalMatchesFound} matches mile, lekin kisi ka bhi status exact 'live' nahi hai.`);
+        }
+    }, (error) => {
+        console.error("❌ Realtime Database Error:", error);
+        alert("Firebase Connection Error: " + error.message);
+    });
+}
+        
 
         if (!hasLiveMatch) {
             matchSelect.innerHTML += '<option value="">No Live Match Available</option>';
