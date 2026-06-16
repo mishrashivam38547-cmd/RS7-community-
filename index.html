@@ -138,31 +138,30 @@
 // Dropdown Element ko select karna
 const matchDropdown = document.getElementById('live-match-dropdown');
 
-// Firestore ke 'matches' collection se real-time data fetch karna
-db.collection('matches').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+// Realtime Database se data fetch karna
+rtdbEsport.ref('matches').on('value', (snapshot) => {
     // Dropdown ko reset karna aur default option rakhna
     matchDropdown.innerHTML = '<option value="">-- Choose Live Match --</option>';
 
-    snapshot.forEach((doc) => {
-        const match = doc.data();
-        
-        // Naya option element banana
-        const option = document.createElement('option');
-        option.value = match.matchId; // Form submit karte waqt ye ID backend me jayegi
-        
-        // Date format ko thoda user-friendly banana (Optional)
-        const matchDate = new Date(match.time).toLocaleString('en-IN', { 
-            dateStyle: 'medium', 
-            timeStyle: 'short' 
-        });
+    if (snapshot.exists()) {
+        snapshot.forEach((childSnapshot) => {
+            const match = childSnapshot.val();
+            
+            const option = document.createElement('option');
+            option.value = match.matchId; // Backend me submit karne ke liye ID
+            
+            // Date format ko user-friendly banana
+            const matchDate = new Date(match.time).toLocaleString('en-IN', { 
+                dateStyle: 'medium', 
+                timeStyle: 'short' 
+            });
 
-        option.text = `${match.name} [${matchDate}]`; // Jo dropdown me player ko dikhega
-        
-        // Option ko dropdown me jodna
-        matchDropdown.appendChild(option);
-    });
+            option.text = `${match.name} [${matchDate}]`; // Jo player ko dikhega
+            matchDropdown.appendChild(option);
+        });
+    }
 });
-        
+                         
         const IMGBB_API_KEY = '0de43554e74e8bef68fc0f49cccf0d1f';
 
         // Tab Switch Navigation
