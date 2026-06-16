@@ -279,7 +279,6 @@
                     <label>Select Available Match</label>
                     <select id="matchSelect" class="form-control">
                         <option value="">-- Choose Live Match --</option>
-                        <!-- Matches yahan Firebase se dynamic load honge -->
                     </select>
                 </div>
 
@@ -352,53 +351,64 @@
     </div>
 
 
-    <!-- 📦 Firebase Core aur Firestore Libraries (v8) -->
+    <!-- 📦 Firebase SDKs (Web v8 compatible libraries) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        // Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDqOAV7hfa6oVxz908GNWMvc0cq5n6cIDc",
-  authDomain: "rs7-community.firebaseapp.com",
-  projectId: "rs7-community",
-  storageBucket: "rs7-community.firebasestorage.app",
-  messagingSenderId: "844493221308",
-  appId: "1:844493221308:web:20982c26bac640da2f0fb9"
-};
+        // 🎮 1. PROJECT-1 CONFIG: ff-tornament-app-9e3ae (Matches Fetch karne ke liye)
+        const esportConfig = {
+            apiKey: "AIzaSyBiZkM5dnAX5ItZybHk_43j5yQGYgui-Jo",
+            authDomain: "ff-tornament-app-9e3ae.firebaseapp.com",
+            projectId: "ff-tornament-app-9e3ae",
+            databaseURL: "https://ff-tornament-app-9e3ae-default-rtdb.firebaseio.com/", 
+            messagingSenderId: "595326120234",
+            appId: "1:595326120234:web:fc6f0e3f02977cadc16e53"
+        };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // 💬 2. PROJECT-2 CONFIG: rs7-community (Submissions aur Opinions save karne ke liye)
+        const communityConfig = {
+            apiKey: "AIzaSyDqOAV7hfa6oVxz908GNWMvc0cq5n6cIDc",
+            authDomain: "rs7-community.firebaseapp.com",
+            projectId: "rs7-community",
+            storageBucket: "rs7-community.firebasestorage.app",
+            messagingSenderId: "844493221308",
+            appId: "1:844493221308:web:20982c26bac640da2f0fb9"
+        };
 
-        // 🔑 Aapki ImgBB API Key
+        // 🔥 Dual App Initialization (Alag-alag naam dekar init kiya)
+        const esportApp = firebase.initializeApp(esportConfig, "esportApp");
+        const communityApp = firebase.initializeApp(communityConfig, "communityApp");
+
+        // 📂 Alag-alag Database Instance references
+        const dbEsport = firebase.firestore(esportApp);      // Matches data source
+        const dbCommunity = firebase.firestore(communityApp); // Community user posts target
+
+        // 🔑 ImgBB API Key
         const IMGBB_API_KEY = '0de43554e74e8bef68fc0f49cccf0d1f';
 
         // ========================================================
-        // 📱 TAB SWITCHING LOGIC
+        // 📱 TAB SWITCHING NAVIGATION LOGIC
         // ========================================================
         function switchTab(sectionId, element) {
-            // Sabhi sections ko chupayein
             document.querySelectorAll('.app-section').forEach(section => {
                 section.classList.remove('active');
             });
-            // Sabhi buttons se active class hatayein
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-
-            // Target section aur button ko active karein
             document.getElementById(sectionId).classList.add('active');
             element.classList.add('active');
         }
 
         // ========================================================
-        // 🔄 1️⃣ LIVE MATCHES CATCH LOGIC
+        // 🔄 1️⃣ FETCH MATCHES FROM ESPORT APP (PROJECT 1)
         // ========================================================
         function fetchLiveMatches() {
             const matchSelect = document.getElementById('matchSelect');
             
-            db.collection('matches').where("status", "==", "live").onSnapshot((querySnapshot) => {
+            // dbEsport se live matches check honge
+            dbEsport.collection('matches').where("status", "==", "live").onSnapshot((querySnapshot) => {
                 matchSelect.innerHTML = '<option value="">-- Choose Live Match --</option>';
                 
                 if(querySnapshot.empty) {
@@ -413,25 +423,17 @@ const app = initializeApp(firebaseConfig);
                     `;
                 });
             }, (error) => {
-                console.error("Matches load karne mein error: ", error);
+                console.error("Esport App se matches load karne mein error: ", error);
             });
         }
 
         // ========================================================
-        // 📺 2️⃣ REAL-TIME COMMUNITY FEED LOGIC
+        // 📺 2️⃣ REAL-TIME COMMUNITY FEED FROM COMMUNITY APP (PROJECT 2)
         // ========================================================
         function listenToCommunityFeed() {
-            const feedContainer = document.getElementById('feed-container');
-
-            // Dono collections (submissions aur opinions) ko real-time listen karne ke liye composite display ya single unified system
-            // Simple approach: Opinions aur Submissions dono ko fetch karke render karna timestamp order mein
-            db.collection('opinions').orderBy('timestamp', 'desc').limit(15).onSnapshot((snapshot) => {
-                renderFeed();
-            });
-
-            db.collection('submissions').orderBy('timestamp', 'desc').limit(15).onSnapshot((snapshot) => {
-                renderFeed();
-            });
+            // Live data refresh triggers for real-time syncing
+            dbCommunity.collection('opinions').orderBy('timestamp', 'desc').limit(10).onSnapshot(() => { renderFeed(); });
+            dbCommunity.collection('submissions').orderBy('timestamp', 'desc').limit(10).onSnapshot(() => { renderFeed(); });
         }
 
         async function renderFeed() {
@@ -439,17 +441,17 @@ const app = initializeApp(firebaseConfig);
             let combinedFeed = [];
 
             try {
-                const opinionsSnap = await db.collection('opinions').orderBy('timestamp', 'desc').limit(10).get();
+                const opinionsSnap = await dbCommunity.collection('opinions').orderBy('timestamp', 'desc').limit(10).get();
                 opinionsSnap.forEach(doc => {
                     combinedFeed.push({ id: doc.id, ...doc.data(), feedType: 'opinion' });
                 });
 
-                const submissionsSnap = await db.collection('submissions').orderBy('timestamp', 'desc').limit(10).get();
+                const submissionsSnap = await dbCommunity.collection('submissions').orderBy('timestamp', 'desc').limit(10).get();
                 submissionsSnap.forEach(doc => {
                     combinedFeed.push({ id: doc.id, ...doc.data(), feedType: 'submission' });
                 });
 
-                // Sort by timestamp descending
+                // Timestamp ke mutabik desc order sort
                 combinedFeed.sort((a, b) => {
                     const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
                     const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
@@ -497,7 +499,7 @@ const app = initializeApp(firebaseConfig);
 
                     feedContainer.innerHTML += postHtml;
 
-                    // 💰 AD UNIT: Beech mein Native Advertisement display karne ke liye slot
+                    // 💰 AD UNIT INSIDE FEED FOR REVENUE
                     if (index === 1) {
                         feedContainer.innerHTML += `
                             <div class="ad-container" style="margin: 20px 0;">
@@ -511,17 +513,15 @@ const app = initializeApp(firebaseConfig);
                 });
 
             } catch (err) {
-                console.error("Feed render karne mein issue:", err);
+                console.error("Feed updates pull error:", err);
             }
         }
-
 
         // ========================================================
         // 📤 3️⃣ IMGBB IMAGE UPLOAD FUNCTION
         // ========================================================
         async function uploadToImgBB(file) {
             if (!file) return null;
-            
             const formData = new FormData();
             formData.append('image', file);
 
@@ -530,22 +530,16 @@ const app = initializeApp(firebaseConfig);
                     method: 'POST',
                     body: formData
                 });
-                
                 const data = await response.json();
-                if (data.success) {
-                    return data.data.url;
-                } else {
-                    console.error("ImgBB Error:", data.error.message);
-                    return null;
-                }
+                return data.success ? data.data.url : null;
             } catch (error) {
-                console.error("Upload failed:", error);
+                console.error("ImgBB upload failed:", error);
                 return null;
             }
         }
 
-// ========================================================
-        // 🎮 4️⃣ TAB: MATCH DETAILS UPLOAD FORM LOGIC
+        // ========================================================
+        // 🎮 4️⃣ SUBMIT MATCH PROOF TO COMMUNITY APP (PROJECT 2)
         // ========================================================
         async function handleMatchUpload() {
             const matchId = document.getElementById('matchSelect').value;
@@ -556,21 +550,22 @@ const app = initializeApp(firebaseConfig);
             const booyahFile = document.getElementById('booyahScreenshot').files[0];
 
             if (!matchId || !uid || !killFile) {
-                alert("⚠️ Please Match Select karein, UID daalein aur Kill Screenshot upload karein!");
+                alert("⚠️ Match Select karein, UID daalein aur Kill Screenshot attach karein!");
                 return;
             }
 
-            alert("🔄 Screenshots ImgBB par aur details Firebase par bheji ja rahi hain...");
+            alert("🔄 Processing data... Please wait.");
 
             const killImageUrl = await uploadToImgBB(killFile);
             const booyahImageUrl = booyahFile ? await uploadToImgBB(booyahFile) : null;
 
             if (!killImageUrl) {
-                alert("❌ Kill Screenshot upload nahi ho paya. Kripya net check karein.");
+                alert("❌ Image upload failed. Retrying suggested.");
                 return;
             }
 
-            db.collection('submissions').add({
+            // Data dbCommunity (Project 2) mein save hoga
+            dbCommunity.collection('submissions').add({
                 matchId: matchId,
                 matchName: matchText,
                 uid: uid,
@@ -580,53 +575,53 @@ const app = initializeApp(firebaseConfig);
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             })
             .then(() => {
-                alert("✅ Aapka Proof submit ho gaya hai! Community Feed par dekhein.");
+                alert("✅ Match details community project par upload ho gayi!");
                 document.getElementById('userUid').value = '';
                 document.getElementById('killScreenshot').value = '';
                 document.getElementById('booyahScreenshot').value = '';
                 document.getElementById('matchSelect').value = '';
+                switchTab('sec-results', document.querySelectorAll('.nav-btn')[2]);
             })
             .catch((error) => {
-                console.error("Firebase Entry Error: ", error);
-                alert("❌ Data save nahi hua. Firebase Firestore rules check karein.");
+                console.error("Firestore Upload Error: ", error);
+                alert("❌ Submissions track error. Rules verify karein.");
             });
         }
 
-
         // ========================================================
-        // 💬 5️⃣ TAB: POST OPINION LOGIC
+        // 💬 5️⃣ SUBMIT OPINION TO COMMUNITY APP (PROJECT 2)
         // ========================================================
         async function handleOpinionSubmit() {
             const msg = document.getElementById('opinionMessage').value;
             const opinionFile = document.getElementById('opinionFile').files[0];
 
             if (!msg.trim()) {
-                alert("⚠️ Please opinion post karne ke liye kuch likhein!");
+                alert("⚠️ Opinion blank nahi choda ja sakta!");
                 return;
             }
 
-            alert("🔄 Aapka opinion upload ho raha hai...");
+            alert("🔄 Posting opinion...");
 
             const opinionImageUrl = opinionFile ? await uploadToImgBB(opinionFile) : null;
 
-            db.collection('opinions').add({
+            // Opinion dbCommunity (Project 2) mein save hoga
+            dbCommunity.collection('opinions').add({
                 message: msg,
                 screenshot: opinionImageUrl,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             })
             .then(() => {
-                alert("✅ Post successfully feed par upload ho gaya!");
+                alert("✅ Opinion successfully feed wall par save ho gaya!");
                 document.getElementById('opinionMessage').value = '';
                 document.getElementById('opinionFile').value = '';
-                switchTab('sec-results', document.querySelectorAll('.nav-btn')[2]); // Redirect to Feed
+                switchTab('sec-results', document.querySelectorAll('.nav-btn')[2]);
             })
             .catch((error) => {
-                console.error("Opinion Error: ", error);
-                alert("❌ Post submit karne mein error aaya.");
+                console.error("Opinion submit error: ", error);
             });
         }
 
-        // Init setup on window load
+        // App Initialization
         window.addEventListener('DOMContentLoaded', () => {
             fetchLiveMatches();
             listenToCommunityFeed();
