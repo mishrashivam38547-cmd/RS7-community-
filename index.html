@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RS7 Community & Results Hub</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b0b0b;
+            color: #ffffff;
+            padding-bottom: 90px; /* Space for bottom nav */
+        }
+
+        /* 👑 HEADER STYLING */
+        header {
+            background: linear-gradient(135deg, #111, #161616);
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid #ff4e50;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        header h1 {
+            font-size: 20px;
+            background: linear-gradient(135deg, #ff4e50, #f9d423);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 💰 ADVERTISEMENT SLOTS STYLING */
+        .ad-container {
+            background: #151515;
+            border: 1px dashed #333;
+            margin: 15px auto;
+            padding: 10px;
+            text-align: center;
+            max-width: 728px;
+            border-radius: 8px;
+        }
+
+        .ad-label {
+            font-size: 9px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: block;
+            letter-spacing: 1px;
+        }
+
+        .ad-placeholder {
+            color: #444;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 20px 0;
+        }
+
+        /* 📱 MAIN CONTENT & FORMS */
+        .container {
+            padding: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .app-section {
+            display: none; /* Hidden by default, controlled via JS */
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .app-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: #161616;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #f9d423;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* FORMS & INPUTS */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #ff4e50;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* BUTTONS */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff4e50, #f9d423);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(255,78,80,0.3);
+            transition: transform 0.2s;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* FEED / POSTS STYLING */
+        .feed-post {
+            background: #161616;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #ff9f43;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 8px;
+        }
+
+        .post-uid {
+            font-weight: bold;
+            color: #00d2d3;
+        }
+
+        .post-content {
+            font-size: 14px;
+            color: #ddd;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .post-image-container {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #222;
+            border: 1px solid #333;
+        }
+
+        .post-image-container img {
+            width: 100%;
+            display: block;
+            height: auto;
+            max-height: 300px;
+            object-fit: contain;
+        }
+
+        /* 📱 FIXED BOTTOM NAVIGATION BAR */
+        #fixed-bottom-nav-bar {
+            display: flex !important;
+            justify-content: space-around !important;
+            align-items: center !important;
+            background: #111111 !important;
+            padding: 8px 1px !important;
+            border-top: 2px solid #ff4e50 !important;
+            width: 100% !important;
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            z-index: 999999 !important;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.7) !important;
+        }
+
+        .nav-btn {
+            flex: 1 !important;
+            margin: 0 2px !important;
+            padding: 9px 1px !important;
+            background: #1c1c1c !important;
+            color: #aaaaaa !important;
+            border: 1px solid #2d2d2d !important;
+            border-radius: 6px !important;
+            font-weight: bold !important;
+            font-size: 10px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 4px !important;
+            text-transform: uppercase !important;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #ff4e50, #f9d423) !important;
+            color: #ffffff !important;
+            border: none !important;
+            box-shadow: 0 2px 10px rgba(255,78,80,0.4) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 HEADER -->
+    <header>
+        <h1>RS7 Tournament Console</h1>
+    </header>
+
+    <!-- 💰 TOP BANNER AD SLOT -->
+    <div class="ad-container">
+        <span class="ad-label">Advertisement</span>
+        <div class="ad-placeholder">
+            <!-- Yahan baad mein Google AdSense ya Adsterra ka code aayega -->
+            <i class="fa-solid fa-rectangle-ad"></i> Responsive Top Banner Ad Slot
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container">
+
+        <!-- ==========================================
+             1️⃣ TAB: HOME (DETAILS UPLOAD FORM)
+             ========================================== -->
+        <div id="sec-upload" class="app-section active">
+            <div class="card">
+                <h2><i class="fa-solid fa-cloud-arrow-up"></i> Upload Match Details</h2>
+                
+                <div class="form-group">
+                    <label>Select Available Match</label>
+                    <select id="matchSelect" class="form-control">
+                        <option value="">-- Choose Live Match --</option>
+                        <option value="match_001">Free Fire Match #102 - Bermuda (Prize: ₹500)</option>
+                        <option value="match_002">Free Fire Match #103 - Purgatory (Prize: ₹1000)</option>
+                        <option value="match_003">Free Fire CS Match #45 - Kalahari (Prize: ₹300)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Website / App UID</label>
+                    <input type="text" id="userUid" class="form-control" placeholder="Enter your unique UID">
+                </div>
+
+                <div class="form-group">
+                    <label>Kill Screenshot</label>
+                    <input type="file" id="killScreenshot" class="form-control" accept="image/*">
+                </div>
+
+                <div class="form-group">
+                    <label>Booyah / Victory Screenshot (Optional)</label>
+                    <input type="file" id="booyahScreenshot" class="form-control" accept="image/*">
+                </div>
+
+                <button class="btn-submit" onclick="handleMatchUpload()">Submit Match Proof</button>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             2️⃣ TAB: POST (ADD OPINION SCREENSHOT)
+             ========================================== -->
+        <div id="sec-opinion" class="app-section">
+            <div class="card">
+                <h2><i class="fa-solid fa-comment-medical"></i> Share Your Opinion</h2>
+                
+                <div class="form-group">
+                    <label>Your Message / Feedback</label>
+                    <textarea id="opinionMessage" class="form-control" placeholder="Write your thoughts about the match, hacker reports, or suggestions..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Attach Screenshot (Optional)</label>
+                    <input type="file" id="opinionFile" class="form-control" accept="image/*">
+                </div>
+
+                <button class="btn-submit" onclick="handleOpinionSubmit()">Post to Community</button>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             3️⃣ TAB: RESULTS (LIVE FEED WALL)
+             ========================================== -->
+        <div id="sec-results" class="app-section">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: #ff4e50; text-transform: uppercase;">
+                <i class="fa-solid fa-rss"></i> Live Community Feed
+            </h2>
+            
+            <div id="feed-container">
+                <!-- Sample Post 1 (Match Proof Upload) -->
+                <div class="feed-post">
+                    <div class="post-header">
+                        <span><i class="fa-solid fa-gamepad"></i> Match Proof</span>
+                        <span class="post-uid">UID: 98273645</span>
+                    </div>
+                    <div class="post-content">
+                        Submitted proof for <strong>Match #102</strong>. Status: <span style="color:#28a745;">Pending Verification</span>
+                    </div>
+                    <div class="post-image-container">
+                        <img src="https://via.placeholder.com/600x300/222/fff?text=Sample+Kill+Screenshot" alt="Screenshot">
+                    </div>
+                </div>
+
+                <!-- 💰 NATIVE AD SLOT IN BETWEEN FEED CONTENT -->
+                <div class="ad-container" style="margin: 20px 0;">
+                    <span class="ad-label">Sponsored Ad</span>
+                    <div class="ad-placeholder" style="padding: 10px 0;">
+                        <i class="fa-solid fa-rectangle-ad"></i> In-Feed Native Ad Unit (High Earnings)
+                    </div>
+                </div>
+
+                <!-- Sample Post 2 (User Opinion) -->
+                <div class="feed-post">
+                    <div class="post-header">
+                        <span><i class="fa-solid fa-comment"></i> User Opinion</span>
+                        <span class="post-uid">UID: 10293847</span>
+                    </div>
+                    <div class="post-content">
+                        Bhai Match #102 ka prize kab tak credit hoga? Booyah ekdam clean tha hacker nahi tha game me! 🔥
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 💰 BOTTOM BANNER AD SLOT -->
+    <div class="ad-container" style="margin-top: 20px;">
+        <span class="ad-label">Advertisement</span>
+        <div class="ad-placeholder">
+            <i class="fa-solid fa-rectangle-ad"></i> Bottom Banner Ad Slot
+        </div>
+    </div>
+
+    <!-- 📱 FIXED BOTTOM NAVIGATION BAR (3 BUTTONS SYSTEM) -->
+    <div id="fixed-bottom-nav-bar">
+        <button onclick="switchTab('upload')" id="nav-upload" class="nav-btn active">
+            <i class="fa-solid fa-house-chimney" style="font-size: 14px;"></i>
+            <span>Home</span>
+        </button>
+
+        <button onclick="switchTab('opinion')" id="nav-opinion" class="nav-btn">
+            <i class="fa-solid fa-pen-to-square" style="font-size: 14px;"></i>
+            <span>Post Opinion</span>
+        </button>
+
+        <button onclick="switchTab('results')" id="nav-results" class="nav-btn">
+            <i class="fa-solid fa-square-poll-vertical" style="font-size: 14px;"></i>
+            <span>Results Feed</span>
+        </button>
+    </div>
+
+    <!-- 🛠️ JAVASCRIPT LOGIC FOR NAVIGATION & ACTIONS -->
+    <script>
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            // Remove active class from all sections
+            document.querySelectorAll('.app-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            // Remove active class from all buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Add active class to selected tab and button
+            document.getElementById('sec-' + tabId).classList.add('active');
+            document.getElementById('nav-' + tabId).classList.add('active');
+            
+            // Scroll to top when tab changes
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Action Handlers
+        function handleMatchUpload() {
+            const match = document.getElementById('matchSelect').value;
+            const uid = document.getElementById('userUid').value;
+            const killFile = document.getElementById('killScreenshot').files[0];
+
+            if (!match || !uid || !killFile) {
+                alert("⚠️ Please Match Select karein, UID daalein aur Kill Screenshot upload karein!");
+                return;
+            }
+
+            alert("✅ Match details successfully receive ho gayi hain! Verification pending hai.");
+            // Firebase Integrations yahan karein
+        }
+
+        function handleOpinionSubmit() {
+            const msg = document.getElementById('opinionMessage').value;
+
+            if (!msg.trim()) {
+                alert("⚠️ Kuch toh likhiye opinion section mein!");
+                return;
+            }
+
+            alert("✅ Aapka opinion successfully community feed par post ho gaya hai!");
+            // Firebase Integrations yahan karein
+        }
+    </script>
+</body>
+  </html>
+  
